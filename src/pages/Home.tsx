@@ -3,30 +3,23 @@ import logoImg from '../assets/images/logo.svg'
 import googleIconImg from '../assets/images/google-icon.svg'
 import { FiLogIn } from 'react-icons/fi'
 import { useHistory } from 'react-router-dom'
-import { GoogleAuthProvider, signInWithPopup, getAuth } from 'firebase/auth'
-import { AppContext } from '../App'
-import { useContext } from 'react'
 
 // CSS
 import '../css/auth.scss'
 import { Button } from '../components/Button';
+import { useAuth } from '../hooks/useAuth'
 
 export function Home() {
 
+  const { signInWithGoole, user } = useAuth()
   const history = useHistory();
-  const {value, setValue} = useContext(AppContext)
 
-  function handleCreateRoom() {
-    const provider = new GoogleAuthProvider()
+  async function handleCreateRoom() {
 
-
-
-    signInWithPopup(getAuth(), provider )
-    .then( result => {
-      console.log(result);
-      history.push('/rooms/new')
-    })
-
+    if (!user) {
+      await signInWithGoole()
+    }
+    history.push('/rooms/new')
   }
 
   return (
@@ -39,7 +32,6 @@ export function Home() {
 
       <main className="auth-main">
         <div className='main-content'>
-          <h1>{value}</h1>
           <img src={logoImg} alt="Letmeask" />
 
           <button className='create-room' onClick={handleCreateRoom} >

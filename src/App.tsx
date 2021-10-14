@@ -6,22 +6,21 @@ import { Home } from './pages/Home';
 import { NewRoom } from './pages/NewRoom'
 
 // Services
-import { createContext, useState } from 'react';
 import { BrowserRouter, Route } from 'react-router-dom'
 import './services/firebase'
 
-export const AppContext = createContext({} as any)
+// Contexts
+import { AuthContextProvider } from './contexts/AuthContext'
+
 
 function App() {
 
-  const [ value, setValue ] = useState('App')
-
   return (
     <BrowserRouter>
-      <AppContext.Provider value={ {value, setValue} } >
+      <AuthContextProvider>
         <Route component={Home} path='/' exact />
         <Route component={NewRoom} path='/rooms/new' />
-      </AppContext.Provider>
+      </AuthContextProvider>
     </BrowserRouter>
   );
 }
