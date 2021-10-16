@@ -1,6 +1,6 @@
 import { getAuth, GoogleAuthProvider } from "@firebase/auth"
 import { signInWithPopup } from "firebase/auth"
-import { createContext, ReactNode, useEffect, useState } from "react"
+import { createContext, ReactNode, useEffect, useState, Dispatch, SetStateAction } from "react"
 
 type User = {
   id: string,
@@ -11,6 +11,7 @@ type User = {
 type AuthContextType = {
   user: User | undefined;
   signInWithGoole: () => Promise<void>;
+  setUser: Dispatch<SetStateAction <User | undefined> >
 }
 
 type AuthContextProviderProps = {
@@ -67,7 +68,7 @@ export function AuthContextProvider(props: AuthContextProviderProps) {
   }
 
   return (
-    <authContext.Provider value={{ user, signInWithGoole }} >
+    <authContext.Provider value={{ user, signInWithGoole, setUser }} >
       {props.children}
     </authContext.Provider>
   )
