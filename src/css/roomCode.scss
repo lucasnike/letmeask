@@ -1,0 +1,19 @@
+#room-code {
+  display: flex;
+  align-items: center;
+  border: 2px solid #835AFD;
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  span {
+    padding: 10px;
+  }
+  
+  svg {
+    background-color: #835AFD;
+    padding: 10px;
+    border-radius: 7px 0 0 7px;
+  }
+}
+

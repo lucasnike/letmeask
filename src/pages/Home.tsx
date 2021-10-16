@@ -3,15 +3,21 @@ import logoImg from '../assets/images/logo.svg'
 import googleIconImg from '../assets/images/google-icon.svg'
 import { FiLogIn } from 'react-icons/fi'
 import { useHistory } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { Button } from '../components/Button';
+import { useState, FormEvent } from 'react'
 
 // CSS
 import '../css/auth.scss'
-import { Button } from '../components/Button';
-import { useAuth } from '../hooks/useAuth'
+import { ref, getDatabase, get, child } from '@firebase/database'
+import { app } from '../services/firebase'
 
 export function Home() {
 
+  const [roomCode, setRoomCode] = useState('')
   const { signInWithGoole, user } = useAuth()
+
+  const database = getDatabase(app)
   const history = useHistory();
 
   async function handleCreateRoom() {
@@ -20,6 +26,27 @@ export function Home() {
       await signInWithGoole()
     }
     history.push('/rooms/new')
+  }
+
+  async function handleJoinRoom(event: FormEvent) {
+    event.preventDefault()
+
+    if (roomCode.trim() === '') {
+      return;
+    }
+
+    const roomRef = ref(database)
+    const snapshot = await get(child(roomRef, `rooms/${roomCode}`))
+
+    console.log(snapshot.exists());
+
+    if (snapshot.exists()) {
+      history.push(`/rooms/${roomCode}`)
+    } else {
+      alert('Room does not exists !!!')
+      return;
+    }
+
   }
 
   return (
@@ -41,12 +68,16 @@ export function Home() {
 
           <div className='separator'>ou entre em uma sala </div>
 
-          <form>
+          <form onSubmit={handleJoinRoom}>
             <input
               type="text"
               name=""
               id=""
-              placeholder="Digite o código da sala" />
+              placeholder="Digite o código da sala"
+              onChange={(event) => {
+                setRoomCode(event.target.value)
+              }}
+              value={roomCode} />
 
             <Button type='submit'> <FiLogIn color='white' /> Entrar na sala</Button>
           </form>
