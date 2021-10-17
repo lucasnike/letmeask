@@ -9,13 +9,25 @@ import { useHistory, useParams } from 'react-router-dom';
 // CSS
 import '../css/romm.scss'
 import { FormEvent, useEffect, useState } from 'react';
-import { getDatabase, ref, push, onValue } from '@firebase/database';
+import { getDatabase, ref, push, onChildAdded, get, onValue } from '@firebase/database';
 import { signOut, getAuth } from 'firebase/auth';
 import { useAuth } from '../hooks/useAuth';
 import { Toaster, toast } from 'react-hot-toast';
+import { child, onChildChanged, onChildRemoved } from 'firebase/database';
 
 type RoomParams = {
   id: string;
+}
+
+type Question = {
+  id: string | null,
+  author: {
+    name: string;
+    avatar: string;
+  }
+  content: string;
+  isHighlighted: boolean;
+  isAnswered: boolean;
 }
 
 type FirebaseQuestions = Record<string, {
@@ -30,8 +42,13 @@ type FirebaseQuestions = Record<string, {
 export function Room() {
 
   const { user, signInWithGoole, setUser } = useAuth()
+
   const params = useParams<RoomParams>()
+
   const [newQuestion, setNewQuestions] = useState('')
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [title, setTitle] = useState('')
+
   const history = useHistory()
   const database = getDatabase()
 
@@ -40,14 +57,24 @@ export function Room() {
   useEffect(() => {
     const roomRef = ref(database, `rooms/${roomId}`)
 
-    onValue(roomRef, (snapshot) => {
+    onValue(roomRef, snapshot => {
       const data = snapshot.val()
       const databaseQuestions: FirebaseQuestions = data.questions ?? {};
-      const questionsArray = Object.entries(databaseQuestions)
-      console.log(questionsArray);
-    })
+      const parsedQuestions = Object.entries(databaseQuestions).map(([key, value]) => {
+        return {
+          id: key,
+          content: value.content,
+          author: value.author,
+          isHighlighted: value.isHighlighted,
+          isAnswered: value.isAnswered
+        }
+      })
 
+      setTitle(data.title)
+      setQuestions(parsedQuestions)
+    })
   }, [roomId])
+
 
   async function handleSendQuestion(event: FormEvent) {
     event.preventDefault()
@@ -72,14 +99,21 @@ export function Room() {
     }
 
     const databaseRef = ref(database, `rooms/${roomId}/questions`)
-    const questionRef = await push(databaseRef, question)
-    
-
-    if (questionRef) {
-      toast.success('Pergunta enviada')
+    async function pushToDatabase() {
+      await push(databaseRef, question).catch(error => {
+        throw new Error('Erro');
+      })
       setNewQuestions('')
     }
 
+    toast.promise(
+      pushToDatabase(),
+      {
+        loading: 'Enviando pergunta...',
+        success: <b>Pergunta enviada !</b>,
+        error: <b>Não foi possível enviar a pergunta</b>,
+      }
+    );
   }
 
   function handleSignOut() {
@@ -109,8 +143,8 @@ export function Room() {
 
       <main className='content'>
         <div className="room-title">
-          <h1>Sala React</h1>
-          <span>4 perguntas</span>
+          <h1 >Sala {title} </h1>
+          {questions.length > 0 && <span>{questions.length} pergunta(s)</span>}
         </div>
 
         <form onSubmit={handleSendQuestion}>
@@ -129,6 +163,12 @@ export function Room() {
             <Button type='submit' disabled={!user} > <FiSend color='#fff' /> Enviar pergunta </Button>
           </div>
         </form>
+
+        {questions.map((values, index) => {
+          return (
+            <div key={index}> {values.content} </div>
+          )
+        })}
       </main>
     </div>
   )
