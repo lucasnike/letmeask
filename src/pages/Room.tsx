@@ -9,11 +9,10 @@ import { useHistory, useParams } from 'react-router-dom';
 // CSS
 import '../css/romm.scss'
 import { FormEvent, useEffect, useState } from 'react';
-import { getDatabase, ref, push, onChildAdded, get, onValue } from '@firebase/database';
+import { getDatabase, ref, push, onValue } from '@firebase/database';
 import { signOut, getAuth } from 'firebase/auth';
 import { useAuth } from '../hooks/useAuth';
 import { Toaster, toast } from 'react-hot-toast';
-import { child, onChildChanged, onChildRemoved } from 'firebase/database';
 
 type RoomParams = {
   id: string;
@@ -123,6 +122,10 @@ export function Room() {
     setUser(undefined)
   }
 
+  async function handleSignInWithGoogle() {
+    await signInWithGoole()
+  }
+
   return (
     <div id="page-room">
       <div><Toaster /></div>
@@ -157,7 +160,7 @@ export function Room() {
 
           <div className='form-footer'>
             {!user ?
-              <span>Para enviar uma pergunta faça seu login <button type='button' onClick={signInWithGoole} >faça seu login</button> </span> :
+              <span>Para enviar uma pergunta faça seu login <button type='button' onClick={handleSignInWithGoogle} >faça seu login</button> </span> :
               <span id='user-info'> <img src={user.avatar} alt={user.name} /> {user.name} <FiLogOut onClick={handleSignOut} /> </span>}
 
             <Button type='submit' disabled={!user} > <FiSend color='#fff' /> Enviar pergunta </Button>
