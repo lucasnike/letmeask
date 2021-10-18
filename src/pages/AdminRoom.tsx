@@ -3,16 +3,15 @@
 import { RoomCode } from '../components/RoomCode';
 import { Button } from '../components/Button'
 import { useHistory, useParams } from 'react-router-dom';
-import { FormEvent, useState } from 'react';
-import { ref, push, getDatabase } from '@firebase/database';
-import { useAuth } from '../hooks/useAuth';
-import { Toaster, toast } from 'react-hot-toast';
+import { ref, getDatabase, remove, update } from '@firebase/database';
+import toast, { Toaster } from 'react-hot-toast';
 import { Question } from '../components/Question';
 import { useRoom } from '../hooks/useRoom';
 
 // CSS
 import logoImg from '../assets/images/logo.svg'
 import '../css/romm.scss'
+import { FiTrash } from 'react-icons/fi'
 
 type RoomParams = {
   id: string;
@@ -22,50 +21,29 @@ export function AdminRoom() {
   const params = useParams<RoomParams>()
   const roomId = params.id
   const database = getDatabase()
-  const { user, signInWithGoole, setUser } = useAuth()
-  const [newQuestion, setNewQuestions] = useState('')
   const history = useHistory()
 
   const { questions, title } = useRoom(roomId)
 
-  async function handleSendQuestion(event: FormEvent) {
-    event.preventDefault()
-    if (newQuestion.trim() === '') {
-      toast.error('Pergunta está vazia !!!')
-      return;
-    }
+  async function handleDeleteQuestion(questionId: string | null) {
+    
+    const confirmed = window.confirm('Tem certeza que deseja excluir esta pergunta ?')
 
-    if (!user) {
-      toast.error('Usuário não autenticado !!!')
-      return;
+    if (confirmed) {
+      const questionRef = ref(database, `rooms/${roomId}/questions/${questionId}`)
+      await remove(questionRef)
+      toast.success('Pergunta removida !!!')
     }
+  }
 
-    const question = {
-      content: newQuestion,
-      author: {
-        name: user.name,
-        avatar: user.avatar
-      },
-      isHighlighted: false,
-      isAnswered: false
-    }
+  async function handleEndRoom() {
+    const roomRef = ref(database ,`rooms/${roomId}`)
 
-    const databaseRef = ref(database, `rooms/${roomId}/questions`)
-    async function pushToDatabase() {
-      await push(databaseRef, question).catch(error => {
-        throw new Error('Erro');
-      })
-      setNewQuestions('')
-    }
+    await update(roomRef, {
+      endedAt: new Date(),
+    })
 
-    toast.promise(
-      pushToDatabase(),
-      {
-        loading: 'Enviando pergunta...',
-        success: <b>Pergunta enviada !</b>,
-        error: <b>Não foi possível enviar a pergunta</b>,
-      }
-    );
+    history.push('/')
   }
 
   return (
@@ -85,7 +63,7 @@ export function AdminRoom() {
 
           <div>
             <RoomCode roomCode={roomId} />
-            <Button isOutlined >Encerrar sala</Button>
+            <Button onClick={handleEndRoom} isOutlined >Encerrar sala</Button>
           </div>
 
         </div>
@@ -99,7 +77,13 @@ export function AdminRoom() {
 
         {questions.map((question) => {
           return (
-            <Question content={question.content} author={question.author} key={question.id} />
+            <Question content={question.content} author={question.author} key={question.id} >
+
+              <button aria-label='Remover pergunta' type='button' onClick={() => handleDeleteQuestion(question.id)} >
+                <FiTrash color='#737380' size={18} />
+              </button>
+
+            </Question>
           )
         })}
       </main>

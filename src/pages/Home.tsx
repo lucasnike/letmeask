@@ -40,6 +40,11 @@ export function Home() {
 
     console.log(snapshot.exists());
 
+    if (snapshot.val().endedAt) {
+      alert('Sala já encerrada !!!')
+      return;
+    }
+
     if (snapshot.exists()) {
       history.push(`/rooms/${roomCode}`)
     } else {

@@ -9,7 +9,7 @@ import { useHistory, useParams } from 'react-router-dom';
 // CSS
 import '../css/romm.scss'
 import { FormEvent, useState } from 'react';
-import { ref, push, getDatabase } from '@firebase/database';
+import { ref, push, getDatabase, remove } from '@firebase/database';
 import { signOut, getAuth } from 'firebase/auth';
 import { useAuth } from '../hooks/useAuth';
 import { Toaster, toast } from 'react-hot-toast';
@@ -82,24 +82,40 @@ export function Room() {
     toast.success('Usuário autenticado com sucesso !!!')
   }
 
-  async function handleLikeQuestion(questionId: string | null) {
+  async function handleLikeQuestion(questionId: string | null, likeId: string | undefined) {
 
     const newLike = ref(database, `rooms/${roomId}/questions/${questionId}/likes`)
 
-    await push(newLike, {
-      authorId: user?.id
-    })
-
-    toast('Liked !!!',
-      {
-        icon: '👍',
-        style: {
-          borderRadius: '10px',
-          background: '#333',
-          color: '#fff',
-        },
+    if (user) {
+      if (!likeId) {
+        await push(newLike, {
+          authorId: user?.id
+        })
+        toast('Liked !!!',
+          {
+            icon: '👍',
+            style: {
+              borderRadius: '10px',
+              background: '#333',
+              color: '#fff',
+            },
+          }
+        );
+      } else {
+        const likeToBeRemovedRef = ref(database, `rooms/${roomId}/questions/${questionId}/likes/${likeId}`)
+        await remove(likeToBeRemovedRef)
+        toast.success('Like removido', {
+          icon: '👍',
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+          }
+        })
       }
-    );
+    } else {
+      toast.error('Você precisa fazer login para dar o like !!')
+    }
 
   }
   return (
@@ -150,14 +166,15 @@ export function Room() {
               author={question.author}
               key={question.id} >
 
-              <button type='button' className='like-button' aria-label='Marcar como gostei' onClick={() => {
+              <button type='button' className={`like-button ${question.likeId && 'liked'}`} aria-label='Marcar como gostei' onClick={() => {
 
-                handleLikeQuestion(question.id)
+                handleLikeQuestion(question.id, question.likeId)
 
               }} >
 
-                <span>10</span>
+                {question.likeCount > 0 && <span>{question.likeCount}</span>}
                 <FiThumbsUp color='#737380' size={20} />
+
               </button>
 
             </Question>
