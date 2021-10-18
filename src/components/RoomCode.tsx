@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import { FiCopy } from "react-icons/fi";
 
 // CSS
@@ -11,6 +12,16 @@ export function RoomCode(props: RoomCodeProps) {
 
   function copyRoomCodeToClipboard() {
     navigator.clipboard.writeText(props.roomCode)
+    toast('Código copiado !!!',
+      {
+        icon: '👏',
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+        },
+      }
+    );
   }
 
   return (

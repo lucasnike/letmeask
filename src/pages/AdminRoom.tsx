@@ -1,26 +1,24 @@
 // Images
-import logoImg from '../assets/images/logo.svg'
-import { FiSend, FiLogOut, FiThumbsUp } from 'react-icons/fi';
 
 import { RoomCode } from '../components/RoomCode';
 import { Button } from '../components/Button'
 import { useHistory, useParams } from 'react-router-dom';
-
-// CSS
-import '../css/romm.scss'
 import { FormEvent, useState } from 'react';
 import { ref, push, getDatabase } from '@firebase/database';
-import { signOut, getAuth } from 'firebase/auth';
 import { useAuth } from '../hooks/useAuth';
 import { Toaster, toast } from 'react-hot-toast';
 import { Question } from '../components/Question';
 import { useRoom } from '../hooks/useRoom';
 
+// CSS
+import logoImg from '../assets/images/logo.svg'
+import '../css/romm.scss'
+
 type RoomParams = {
   id: string;
 }
 
-export function Room() {
+export function AdminRoom() {
   const params = useParams<RoomParams>()
   const roomId = params.id
   const database = getDatabase()
@@ -70,38 +68,6 @@ export function Room() {
     );
   }
 
-  function handleSignOut() {
-    const auth = getAuth()
-    signOut(auth)
-
-    setUser(undefined)
-  }
-
-  async function handleSignInWithGoogle() {
-    await signInWithGoole()
-    toast.success('Usuário autenticado com sucesso !!!')
-  }
-
-  async function handleLikeQuestion(questionId: string | null) {
-
-    const newLike = ref(database, `rooms/${roomId}/questions/${questionId}/likes`)
-
-    await push(newLike, {
-      authorId: user?.id
-    })
-
-    toast('Liked !!!',
-      {
-        icon: '👍',
-        style: {
-          borderRadius: '10px',
-          background: '#333',
-          color: '#fff',
-        },
-      }
-    );
-
-  }
   return (
     <div id="page-room">
       <div><Toaster /></div>
@@ -116,7 +82,12 @@ export function Room() {
             style={{
               cursor: 'pointer'
             }} />
-          <RoomCode roomCode={roomId} />
+
+          <div>
+            <RoomCode roomCode={roomId} />
+            <Button isOutlined >Encerrar sala</Button>
+          </div>
+
         </div>
       </header>
 
@@ -126,41 +97,9 @@ export function Room() {
           {questions.length > 0 && <span>{questions.length} pergunta(s)</span>}
         </div>
 
-        <form onSubmit={handleSendQuestion}>
-          <textarea
-            placeholder='O que você quer perguntar?'
-            onChange={(event) => {
-              setNewQuestions(event.target.value)
-            }}
-            value={newQuestion} />
-
-          <div className='form-footer'>
-            {!user ?
-              <span>Para enviar uma pergunta faça seu login <button type='button' onClick={handleSignInWithGoogle} >faça seu login</button> </span> :
-              <span id='user-info'> <img src={user.avatar} alt={user.name} /> {user.name} <FiLogOut onClick={handleSignOut} /> </span>}
-
-            <Button type='submit' disabled={!user} > <FiSend color='#fff' /> Enviar pergunta </Button>
-          </div>
-        </form>
-
         {questions.map((question) => {
           return (
-            <Question
-              content={question.content}
-              author={question.author}
-              key={question.id} >
-
-              <button type='button' className='like-button' aria-label='Marcar como gostei' onClick={() => {
-
-                handleLikeQuestion(question.id)
-
-              }} >
-
-                <span>10</span>
-                <FiThumbsUp color='#737380' size={20} />
-              </button>
-
-            </Question>
+            <Question content={question.content} author={question.author} key={question.id} />
           )
         })}
       </main>
