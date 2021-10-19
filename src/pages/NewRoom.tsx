@@ -26,12 +26,12 @@ export function NewRoom() {
 
     const roomRef = ref(database, 'rooms')
 
-    const firebaseRomm = push(roomRef, {
+    const firebaseRomm = await push(roomRef, {
       title: newRoom,
       authorId: user?.id
     })
 
-    history.push(`/rooms/${firebaseRomm.key}`)
+    history.push(`/admin/rooms/${firebaseRomm.key}`)
   }
 
   return (
